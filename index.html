@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dopamine Digital - COO Lead Pipeline Analysis</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            color: #e4e4e4;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 50px; }
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+        .subtitle { color: #888; font-size: 1.1rem; }
+        .date { color: #666; margin-top: 10px; font-size: 0.9rem; }
+
+        /* Executive Summary Cards */
+        .exec-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .exec-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .exec-card.urgent { border-color: #ff6b6b; background: rgba(255, 107, 107, 0.1); }
+        .exec-card.hot { border-color: #feca57; background: rgba(254, 202, 87, 0.1); }
+        .exec-card.fix { border-color: #48dbfb; background: rgba(72, 219, 251, 0.1); }
+        .exec-card.email { border-color: #1dd1a1; background: rgba(29, 209, 161, 0.1); }
+        .exec-card.review { border-color: #a55eea; background: rgba(165, 94, 234, 0.1); }
+        .exec-number { font-size: 2.5rem; font-weight: bold; margin-bottom: 5px; }
+        .exec-card.urgent .exec-number { color: #ff6b6b; }
+        .exec-card.hot .exec-number { color: #feca57; }
+        .exec-card.fix .exec-number { color: #48dbfb; }
+        .exec-card.email .exec-number { color: #1dd1a1; }
+        .exec-card.review .exec-number { color: #a55eea; }
+        .exec-label { font-size: 0.85rem; color: #aaa; }
+
+        /* Section Styles */
+        .section { margin-bottom: 40px; }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+        .section-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+        .section-icon.disqualify { background: rgba(255, 107, 107, 0.2); }
+        .section-icon.hot { background: rgba(254, 202, 87, 0.2); }
+        .section-icon.fix { background: rgba(72, 219, 251, 0.2); }
+        .section-icon.email { background: rgba(29, 209, 161, 0.2); }
+        .section-icon.review { background: rgba(165, 94, 234, 0.2); }
+        h2 { font-size: 1.4rem; color: #fff; }
+        h3 { font-size: 1.1rem; color: #ccc; margin: 20px 0 15px 0; }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .data-table th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .data-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+        .data-table tr:hover { background: rgba(255, 255, 255, 0.03); }
+        .data-table tr:last-child td { border-bottom: none; }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge.jordan { background: rgba(72, 219, 251, 0.2); color: #48dbfb; }
+        .badge.joey { background: rgba(255, 107, 182, 0.2); color: #ff6bb6; }
+        .badge.status { background: rgba(255, 255, 255, 0.1); color: #aaa; }
+        .badge.action { background: rgba(254, 202, 87, 0.2); color: #feca57; }
+        .badge.hot { background: rgba(255, 107, 107, 0.3); color: #ff6b6b; }
+        .badge.warm { background: rgba(254, 202, 87, 0.3); color: #feca57; }
+        .badge.engaged { background: rgba(29, 209, 161, 0.3); color: #1dd1a1; }
+        .badge.decline { background: rgba(255, 255, 255, 0.1); color: #888; }
+
+        /* Alert Boxes */
+        .alert-box {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .alert-box.danger {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+        .alert-box.warning {
+            background: rgba(254, 202, 87, 0.1);
+            border: 1px solid rgba(254, 202, 87, 0.3);
+        }
+        .alert-box.info {
+            background: rgba(72, 219, 251, 0.1);
+            border: 1px solid rgba(72, 219, 251, 0.3);
+        }
+        .alert-box.success {
+            background: rgba(29, 209, 161, 0.1);
+            border: 1px solid rgba(29, 209, 161, 0.3);
+        }
+        .alert-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .alert-box.danger .alert-title { color: #ff6b6b; }
+        .alert-box.warning .alert-title { color: #feca57; }
+        .alert-box.info .alert-title { color: #48dbfb; }
+        .alert-box.success .alert-title { color: #1dd1a1; }
+
+        /* Lead Cards */
+        .lead-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #48dbfb;
+        }
+        .lead-card.hot { border-left-color: #ff6b6b; }
+        .lead-card.warm { border-left-color: #feca57; }
+        .lead-card .lead-name { font-size: 1.1rem; font-weight: 600; color: #fff; }
+        .lead-card .lead-company { color: #48dbfb; font-size: 0.9rem; }
+        .lead-card .lead-issue { margin-top: 10px; color: #ccc; font-size: 0.9rem; }
+        .lead-card .lead-action {
+            margin-top: 12px;
+            padding: 10px 15px;
+            background: rgba(254, 202, 87, 0.1);
+            border-radius: 8px;
+            color: #feca57;
+            font-size: 0.85rem;
+        }
+        .lead-card .lead-research {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(72, 219, 251, 0.08);
+            border-radius: 8px;
+            border-left: 3px solid #48dbfb;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .lead-card .lead-research a {
+            color: #48dbfb;
+            text-decoration: none;
+        }
+        .lead-card .lead-research a:hover {
+            text-decoration: underline;
+        }
+
+        /* Revenue Box */
+        .revenue-box {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(254, 202, 87, 0.1) 100%);
+            border: 1px solid rgba(254, 202, 87, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .revenue-title { color: #feca57; font-size: 1rem; margin-bottom: 10px; }
+        .revenue-amount { font-size: 2.5rem; font-weight: bold; color: #fff; }
+        .revenue-subtitle { color: #888; font-size: 0.9rem; margin-top: 5px; }
+
+        /* Action Steps */
+        .action-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .action-step {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .action-step .step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            border-radius: 50%;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: #000;
+            margin-bottom: 10px;
+        }
+        .action-step .step-title { font-weight: 600; color: #fff; margin-bottom: 5px; }
+        .action-step .step-desc { color: #888; font-size: 0.85rem; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 40px;
+        }
+
+        /* Highlight text */
+        .highlight { color: #48dbfb; }
+        .highlight-warn { color: #feca57; }
+        .highlight-danger { color: #ff6b6b; }
+
+        /* Collapsible */
+        details {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        summary {
+            padding: 15px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #ccc;
+        }
+        summary:hover { background: rgba(255, 255, 255, 0.02); }
+        details[open] summary { border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .details-content { padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>COO Lead Pipeline Analysis</h1>
+            <p class="subtitle">Dopamine Digital | Actionable Intelligence Report</p>
+            <p class="date">Generated: March 10, 2026 | 107 Active Leads Analyzed</p>
+        </header>
+
+        <!-- Executive Summary -->
+        <div class="exec-summary">
+            <div class="exec-card urgent">
+                <div class="exec-number">13</div>
+                <div class="exec-label">Move to Don't Pursue</div>
+            </div>
+            <div class="exec-card hot">
+                <div class="exec-number">7</div>
+                <div class="exec-label">Hot Leads to Close</div>
+            </div>
+            <div class="exec-card fix">
+                <div class="exec-number">8</div>
+                <div class="exec-label">Status Mismatches</div>
+            </div>
+            <div class="exec-card email">
+                <div class="exec-number">9</div>
+                <div class="exec-label">Unanswered Emails</div>
+            </div>
+            <div class="exec-card review">
+                <div class="exec-number">34</div>
+                <div class="exec-label">Need ICP Check</div>
+            </div>
+        </div>
+
+        <!-- Revenue at Risk -->
+        <div class="revenue-box">
+            <div class="revenue-title">POTENTIAL REVENUE AT RISK</div>
+            <div class="revenue-amount">$192K - $240K</div>
+            <div class="revenue-subtitle">7 hot leads ($84-105K) + 9 warm emails ($108-135K) sitting without follow-up</div>
+        </div>
+
+        <!-- Section 1: Disqualify -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon disqualify">❌</div>
+                <h2>STATUS CHANGE REQUIRED: Move to Don't Pursue (13 Leads)</h2>
+            </div>
+
+            <div class="alert-box danger">
+                <div class="alert-title">These leads have explicit disqualification in comments</div>
+                <p>Team members already flagged these as "not a fit" but status was never updated. Clean up immediately.</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Lead</th>
+                        <th>Company</th>
+                        <th>Owner</th>
+                        <th>Current Status</th>
+                        <th>Reason to Disqualify</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><strong>Tammuz Dubnov</strong></td>
+                        <td>Autonomy AI</td>
+                        <td><span class="badge jordan">Jordan</span></td>
+                        <td><span class="badge status">nurturing</span></td>
+                        <td>Jordan: "The guy was not a fit"</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Adrian Tiron</strong></td>
+                        <td>FORTBRIDGE</td>
+                        <td><span class="badge joey">Joey</span></td>
+                        <td><span class="badge status">discovery</span></td>
+                        <td>Joey: "too many red flags, barely getting clients" Jordan: "nightmare"</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><strong>Patrizia Bertini</strong></td>
+                        <td>Euler Associates</td>
+                        <td><span class="badge joey">Joey</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Joey: "Not a fit. Started spring this year, pre-revenue"</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><strong>Kevin Keller</strong></td>
+                        <td>Focus AIM</td>
+                        <td><span class="badge joey">Joey</span></td>
+                        <td><span class="badge status">pre-calls</span></td>
+                        <td>Joey: "Not a fit - not a decisionmaker" (VP)</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><strong>Chris Duffy</strong></td>
+                        <td>AI consultancy</td>
+                        <td><span class="badge jordan">Jordan</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Joey: "no room to scale, no room for us to sell"</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td><strong>Mark Farmer</strong></td>
+                        <td>PerryLabs</td>
+                        <td><span class="badge jordan">Jordan</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Joey: "Not a fit. CTO, not a decisionmaker"</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td><strong>Sharna Quirke</strong></td>
+                        <td>RPNA</td>
+                        <td><span class="badge joey">Joey</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Joey: "Not relevant - public sector only"</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td><strong>Sean Masters</strong></td>
+                        <td>Brand Clear</td>
+                        <td><span class="badge joey">Joey</span></td>
+                        <td><span class="badge status">discovery</span></td>
+                        <td>Joey: "wants to focus fully on referrals" - no interest in outbound</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td><strong>Trayco Ross</strong></td>
+                        <td>Vrify</td>
+                        <td><span class="badge jordan">Jordan</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Comments show "not a fit" signal</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td><strong>Cameron Torstenson</strong></td>
+                        <td>Indemn</td>
+                        <td><span class="badge jordan">Jordan</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Angela: "doesn't seem like a great fit, do not pursue"</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td><strong>Aseem Asthana</strong></td>
+                        <td>AmolinoAI</td>
+                        <td><span class="badge joey">Joey</span></td>
+                        <td><span class="badge status">ai analyze</span></td>
+                        <td>Jordan: "doing only 10K/month, no budget"</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td><strong>Mathis Cohen-Solal</strong></td>
+                        <td>Astry</td>
+                        <td><span class="badge jordan">Jordan</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Joey: "Very young, 22 years, early stage SaaS"</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td><strong>Chieh-Hung Cheng</strong></td>
+                        <td>Roulettech</td>
+                        <td><span class="badge jordan">Jordan</span></td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td>Joey: "declined call last minute" + EdTech product</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 2: Hot Leads -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon hot">🔥</div>
+                <h2>URGENT: Hot Leads Requiring Immediate Action (7 Leads)</h2>
+            </div>
+
+            <div class="alert-box warning">
+                <div class="alert-title">Verbal Yes / Very Warm - But No Close</div>
+                <p>These leads showed strong buying signals but appear to have stalled. Follow up TODAY.</p>
+            </div>
+
+            <div class="lead-card hot">
+                <div class="lead-name">Hilary Jones</div>
+                <div class="lead-company">Vice President @ Getwizer</div>
+                <div class="lead-issue">
+                    <span class="badge jordan">Jordan</span> <span class="badge status">unorganised</span><br><br>
+                    Jordan said: <em>"She's invited the CEO to the next call. If budget makes sense I think it will close"</em>
+                </div>
+                <div class="lead-research">
+                    <strong>EXTERNAL RESEARCH:</strong><br>
+                    • <strong>Company:</strong> Getwizer - Consumer insights platform, video-based research at scale<br>
+                    • <strong>Funding:</strong> PE-backed, ~$11M annual revenue (2024)<br>
+                    • <strong>Role:</strong> VP Product Development - reports to CEO<br>
+                    • <strong>ICP FIT:</strong> ✅ B2B SaaS, $11M revenue, PE-backed = has budget, VP with CEO access<br>
+                    • <a href="https://www.linkedin.com/in/hilary-jones-99236b89/" target="_blank">LinkedIn</a> | <a href="https://getwizer.com" target="_blank">Website</a>
+                </div>
+                <div class="lead-action">
+                    <strong>ACTION:</strong> Schedule CEO meeting IMMEDIATELY. PE-backed at $11M = budget confirmed. Hot deal.
+                </div>
+            </div>
+
+            <div class="lead-card hot">
+                <div class="lead-name">Andy Evans</div>
+                <div class="lead-company">Chief Revenue Officer @ OfficerReports.com</div>
+                <div class="lead-issue">
+                    <span class="badge joey">Joey</span> <span class="badge status">ai analyze</span><br><br>
+                    Jordan: <em>"Got a verbal yes from him"</em> but also <em>"I have a feeling he may pull out"</em>
+                </div>
+                <div class="lead-research">
+                    <strong>EXTERNAL RESEARCH:</strong><br>
+                    • <strong>Company:</strong> OfficerReports.com (not OfficerApps) - Security guard reporting software<br>
+                    • <strong>Role:</strong> CRO - revenue responsibility, decision maker<br>
+                    • <strong>Background:</strong> 25+ years sales/revenue experience<br>
+                    • <strong>ICP FIT:</strong> ⚠️ MAYBE - B2B SaaS but security software, not consulting. CRO has budget authority.<br>
+                    • <a href="https://www.linkedin.com/in/aevans7459/" target="_blank">LinkedIn</a>
+                </div>
+                <div class="lead-action">
+                    <strong>ACTION:</strong> Close or confirm dropout. He's CRO with authority. Verbal yes = don't let die.
+                </div>
+            </div>
+
+            <div class="lead-card warm">
+                <div class="lead-name">Sascha Dobbelaere</div>
+                <div class="lead-company">Founder @ OneSila</div>
+                <div class="lead-issue">
+                    <span class="badge joey">Joey</span> <span class="badge status">ai analyze</span><br><br>
+                    Joey: <em>"Seemed very warm. Is struggling with outbound with a very low response rate"</em>
+                </div>
+                <div class="lead-research">
+                    <strong>EXTERNAL RESEARCH:</strong><br>
+                    • <strong>Company:</strong> OneSila - Open-source PIM/DAM platform for e-commerce<br>
+                    • <strong>Traction:</strong> Featured in TechCrunch, Product Hunt launch, open-source community<br>
+                    • <strong>Location:</strong> Belgium-based, looking to expand<br>
+                    • <strong>ICP FIT:</strong> ⚠️ VERIFY REVENUE - Tech is promising, struggling with outbound = pain confirmed. Check if $30K+/mo.<br>
+                    • <a href="https://www.linkedin.com/in/sascha-dobbelaere/" target="_blank">LinkedIn</a> | <a href="https://onesila.com" target="_blank">Website</a>
+                </div>
+                <div class="lead-action">
+                    <strong>ACTION:</strong> Ask about revenue on next call. If $30K+/mo, fast-track to close.
+                </div>
+            </div>
+
+            <div class="lead-card warm">
+                <div class="lead-name">Kiran Kashalkar</div>
+                <div class="lead-company">Founder @ Next Moca</div>
+                <div class="lead-issue">
+                    <span class="badge joey">Joey</span> <span class="badge status">discovery</span><br><br>
+                    Joey: <em>"Textbook lead. Number 1 focus is to get more leads. Trying to get co-founder on discovery"</em>
+                </div>
+                <div class="lead-research">
+                    <strong>EXTERNAL RESEARCH:</strong><br>
+                    • <strong>Company:</strong> Next Moca - AI agent orchestration platform<br>
+                    • <strong>Background:</strong> Impressive - Director @ Oracle Cloud, Principal PM @ Brightcove<br>
+                    • <strong>Open Source:</strong> Created ADL (Agent Definition Language) - tech-forward<br>
+                    • <strong>ICP FIT:</strong> ✅ STRONG - B2B tech, founder has enterprise background = understands value. Pain confirmed.<br>
+                    • <a href="https://www.linkedin.com/in/kkashalkar/" target="_blank">LinkedIn</a> | <a href="https://nextmoca.com" target="_blank">Website</a>
+                </div>
+                <div class="lead-action">
+                    <strong>ACTION:</strong> Priority close. Enterprise background = gets ROI. Joey called it "textbook" - trust that.
+                </div>
+            </div>
+
+            <div class="lead-card warm">
+                <div class="lead-name">James Leavesley</div>
+                <div class="lead-company">CEO & Founder @ Cultiv8tiv</div>
+                <div class="lead-issue">
+                    <span class="badge joey">Joey</span> <span class="badge status">ai analyze</span><br><br>
+                    Jordan: <em>"The guy was very interesting. He has a very clear need - struggling to get leads"</em>
+                </div>
+                <div class="lead-research">
+                    <strong>EXTERNAL RESEARCH:</strong><br>
+                    • <strong>Company:</strong> Cultiv8tiv - AI-driven workplace culture assessment platform<br>
+                    • <strong>Location:</strong> Cardiff, Wales<br>
+                    • <strong>Background:</strong> Previous software company CEO, podcast appearances, thought leader<br>
+                    • <strong>Pain:</strong> Explicitly stated on podcast: "siloed, disruptive culture" - built product to solve it<br>
+                    • <strong>ICP FIT:</strong> ✅ STRONG - B2B SaaS, founder/CEO, struggling with outbound = textbook fit<br>
+                    • <a href="https://www.linkedin.com/in/jamesleavesley/" target="_blank">LinkedIn</a> | <a href="https://cultiv8tiv.com" target="_blank">Website</a>
+                </div>
+                <div class="lead-action">
+                    <strong>ACTION:</strong> Push to discovery. Serial founder, clear pain, struggling with leads. Priority.
+                </div>
+            </div>
+
+            <div class="lead-card warm">
+                <div class="lead-name">Cormac Repman</div>
+                <div class="lead-company">Director @ Nurturance</div>
+                <div class="lead-issue">
+                    <span class="badge joey">Joey</span> <span class="badge status">ai analyze</span><br><br>
+                    Joey: <em>"Could be a nice opportunity. Biggest focus is to get better results from cold outreach"</em>
+                </div>
+                <div class="lead-research">
+                    <strong>EXTERNAL RESEARCH:</strong><br>
+                    • <strong>Company:</strong> Nurturance - Outbound sales consultancy for FinTech & InsurTech<br>
+                    • <strong>Multiple entities:</strong> Nurturance Ltd, Nurturance AI Ltd, House of Nurturance Ltd<br>
+                    • <strong>Claims:</strong> "10+ years sales experience, £100M+ deal value negotiated"<br>
+                    • <strong>Age:</strong> ⚠️ Born July 2000 (25 years old) - young for claimed experience<br>
+                    • <strong>ICP FIT:</strong> ⚠️ COMPETITOR? - They DO outbound for others. Could be partnership or competitor research.<br>
+                    • <a href="https://www.linkedin.com/in/cormac-repman-a796a51b4/" target="_blank">LinkedIn</a> | <a href="https://nurturance.uk" target="_blank">Website</a>
+                </div>
+                <div class="lead-action">
+                    <strong>ACTION:</strong> VERIFY INTENT. Is he buying for his agency or researching DD as competitor? Proceed carefully.
+                </div>
+            </div>
+
+            <div class="lead-card warm">
+                <div class="lead-name">Bill Wallsgrove</div>
+                <div class="lead-company">Brand Consultant @ Brandad UK</div>
+                <div class="lead-issue">
+                    <span class="badge joey">Joey</span> <span class="badge status">ai analyze</span><br><br>
+                    Joey: <em>"One man army. Would love to expand market to Europe. Planned him in for discovery"</em>
+                </div>
+                <div class="lead-research">
+                    <strong>EXTERNAL RESEARCH:</strong><br>
+                    • <strong>Background:</strong> 10+ years since leaving London agency life (Coley Porter Bell, Futurebrand, Planet)<br>
+                    • <strong>Current:</strong> Independent consultant, lecturer at University of Brighton, mentor at Plus X Innovation<br>
+                    • <strong>Work:</strong> Brand licensing, strategy - worked on Tate/B&Q project<br>
+                    • <strong>AI interest:</strong> Presents on AI image generation for brand design<br>
+                    • <strong>ICP FIT:</strong> ⚠️ VERIFY REVENUE - One-man consultancy = likely under $30K/mo. May not have budget.<br>
+                    • <a href="https://www.linkedin.com/in/bill-wallsgrove1/" target="_blank">LinkedIn</a>
+                </div>
+                <div class="lead-action">
+                    <strong>ACTION:</strong> Verify revenue on discovery. If solo consultant without revenue, may need to deprioritize.
+                </div>
+            </div>
+
+            <h3>Timing Off - Set Calendar Reminders</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Lead</th><th>Company</th><th>Timing</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Narasimha Krishnakumar</strong></td>
+                        <td>SalaheE Partners</td>
+                        <td>Fully booked until June. Wants to build pipeline from April.</td>
+                        <td><span class="badge action">Set April 2026 reminder</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Brad Banyas</strong></td>
+                        <td>OMI</td>
+                        <td>Joey: "Looking for reliable outbound partner" - discovery never happened</td>
+                        <td><span class="badge action">Revive immediately</span></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Chad Janssen</strong></td>
+                        <td>WASTELINQ</td>
+                        <td>Joey: "Really interested, solving huge problem. Not the right time"</td>
+                        <td><span class="badge action">Set 90-day reminder</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 3: Status Mismatch -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon fix">🔧</div>
+                <h2>Status Mismatch - Fix Immediately (8 Leads)</h2>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr><th>Lead</th><th>Company</th><th>Current</th><th>Should Be</th><th>Reason</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Hilary Jones</strong></td>
+                        <td>Getwizer</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge warm">discovery/close</span></td>
+                        <td>CEO meeting pending, warm lead</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Johnny Maghzal</strong></td>
+                        <td>Togal.AI</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge warm">discovery</span></td>
+                        <td>Jordan: "The guy was a fit, needs follow up"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Nathan Burke</strong></td>
+                        <td>7AI</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge warm">discovery</span></td>
+                        <td>Subscribed to newsletter, needs light discovery</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Brett Hillier</strong></td>
+                        <td>Skedyul</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge warm">discovery</span></td>
+                        <td>Angela: "Pre-call went well, has revenue and budget"</td>
+                    </tr>
+                    <tr>
+                        <td><strong>D.Leigh Hunte</strong></td>
+                        <td>Vanguard</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>No-show, followed up, no response</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tom Blair</strong></td>
+                        <td>iClerk</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>Jordan: "I never spoke to them" - unclear</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hari Subramanian</strong></td>
+                        <td>Niti AI</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>No-show, rescheduling meeting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>John Deakins</strong></td>
+                        <td>DataSapien</td>
+                        <td><span class="badge status">unorganised</span></td>
+                        <td><span class="badge status">revisit</span></td>
+                        <td>No-show, sent booking link</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 4: Instantly Emails -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon email">📧</div>
+                <h2>Instantly Unread Emails - Respond Today (9 Warm)</h2>
+            </div>
+
+            <div class="alert-box success">
+                <div class="alert-title">These people replied positively and are waiting for a response</div>
+                <p>These are podcast leads who expressed interest. Not in our ClickUp 107 analysis - may be new or separate pipeline.</p>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr><th>Email</th><th>Subject</th><th>Response</th><th>Signal</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>jayden.harley.elworthy@gmail.com</td>
+                        <td>Re: Jayden podcast?</td>
+                        <td>"Yes please, lets get it going"</td>
+                        <td><span class="badge hot">HOT</span></td>
+                        <td>Book immediately</td>
+                    </tr>
+                    <tr>
+                        <td>hannahgodfrey1@gmail.com</td>
+                        <td>Re: Hannah podcast?</td>
+                        <td>"Sure feel free to send details thanks"</td>
+                        <td><span class="badge warm">WARM</span></td>
+                        <td>Send details now</td>
+                    </tr>
+                    <tr>
+                        <td>claredooley75@gmail.com</td>
+                        <td>Re: Clare podcast?</td>
+                        <td>"Happy to hear more"</td>
+                        <td><span class="badge warm">WARM</span></td>
+                        <td>Respond now</td>
+                    </tr>
+                    <tr>
+                        <td>robsalter64@gmail.com</td>
+                        <td>Re: Rob podcast?</td>
+                        <td>"Feel free to ask me the 5 questions"</td>
+                        <td><span class="badge engaged">READY</span></td>
+                        <td>Send questions</td>
+                    </tr>
+                    <tr>
+                        <td>jasonbell@fastmail.fm</td>
+                        <td>Re: Jason podcast?</td>
+                        <td>"I can connect you to my agent"</td>
+                        <td><span class="badge engaged">INTERESTED</span></td>
+                        <td>Follow up</td>
+                    </tr>
+                    <tr>
+                        <td>tonypaladin@paladinbrookes.com</td>
+                        <td>Re: Tony podcast?</td>
+                        <td>"I'm happy to provide context"</td>
+                        <td><span class="badge warm">WARM</span></td>
+                        <td>Continue conversation</td>
+                    </tr>
+                    <tr>
+                        <td>adrian.hands@gmail.com</td>
+                        <td>Re: Adrian podcast?</td>
+                        <td>"answers below in red"</td>
+                        <td><span class="badge engaged">ENGAGED</span></td>
+                        <td>Review answers</td>
+                    </tr>
+                    <tr>
+                        <td>ella@hex-development.com</td>
+                        <td>Re: Tom podcast?</td>
+                        <td>Sending answers from Tom</td>
+                        <td><span class="badge engaged">ENGAGED</span></td>
+                        <td>Review answers</td>
+                    </tr>
+                    <tr>
+                        <td>anitaveroe@gmail.com</td>
+                        <td>Re: Dr Anita podcast?</td>
+                        <td>"working on securing a customer"</td>
+                        <td><span class="badge engaged">ENGAGED</span></td>
+                        <td>Follow up</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Not Warm - Handle Appropriately</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Email</th><th>Response</th><th>Action</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>eddbally@gmail.com</td>
+                        <td>"not interested"</td>
+                        <td><span class="badge decline">Close out</span></td>
+                    </tr>
+                    <tr>
+                        <td>david@palefountain.com</td>
+                        <td>"timing is off, bad family news"</td>
+                        <td><span class="badge status">Revisit in 30 days</span></td>
+                    </tr>
+                    <tr>
+                        <td>annette.kramer@gmail.com</td>
+                        <td>"not available mornings until 10am"</td>
+                        <td><span class="badge action">Send afternoon slots</span></td>
+                    </tr>
+                    <tr>
+                        <td>ruthhpalmer@gmail.com</td>
+                        <td>Complaint about unsubscribe</td>
+                        <td><span class="badge decline">Handle carefully</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Section 5: Upcoming Podcasts -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon review">🎙️</div>
+                <h2>Upcoming Podcasts - ICP Check Needed (34 Leads)</h2>
+            </div>
+
+            <div class="alert-box info">
+                <div class="alert-title">These leads are scheduled for podcasts</div>
+                <p>Recommend quick ICP verification before recording to ensure we're not wasting time on non-fits.</p>
+            </div>
+
+            <details>
+                <summary>View All 34 Upcoming Podcast Leads</summary>
+                <div class="details-content">
+                    <table class="data-table">
+                        <thead>
+                            <tr><th>Lead</th><th>Company</th><th>Owner</th><th>Notes</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Arun Kumar</td><td>RapidFire AI</td><td><span class="badge jordan">Jordan</span></td><td>CEO joining - HIGH PRIORITY</td></tr>
+                            <tr><td>Arthur Posch</td><td>Customer Success VP</td><td><span class="badge joey">Joey</span></td><td>"ready, yes" signals</td></tr>
+                            <tr><td>Oddi Aasheim</td><td>FirstHuman</td><td><span class="badge joey">Joey</span></td><td>Jan 5 call scheduled</td></tr>
+                            <tr><td>Rob Nicholls</td><td>Rob Nicholls Consulting</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Tom Emery</td><td>HEX Talent</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Lee Lam</td><td>Your Startup Partner</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Catherine Hayes</td><td>gunnercookeOP</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Nicola Anderson</td><td>Capacity to Grow</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Kimberly Wiefling</td><td>-</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Dee Singh Kothari</td><td>Auditel</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Douglas McCormick</td><td>RICS Board</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Toby Parnell</td><td>majaco</td><td><span class="badge jordan">Jordan</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Matt Clutterham</td><td>Brand Transform</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Nikos Terizakis</td><td>AI-on-Cloud</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Tamzin Hall</td><td>Coaching</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Mike Le</td><td>Conative.AI</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Abhi J.</td><td>Smart Exits</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Craig Taylor</td><td>ROMI Associates</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Abdul Hannan Mirza</td><td>IMTL Marketing</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Andrew Knight</td><td>Cycubix</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Simon Cuthbert</td><td>VARChannels</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Christian Loyer</td><td>exceedium</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Ruth Cheesley</td><td>Mautic</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Rhys Sandford</td><td>RKS Growth</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Simon J Stephen</td><td>Intorcida</td><td><span class="badge joey">Joey</span></td><td>No comments - verify ICP</td></tr>
+                            <tr><td>Seema Menon</td><td>CyberMindr</td><td><span class="badge joey">Joey</span></td><td>Rescheduled for Dec 12</td></tr>
+                            <tr><td>Jeff Kirchick</td><td>Zorro</td><td><span class="badge joey">Joey</span></td><td>Pre-call done</td></tr>
+                            <tr><td>Randy Wandell</td><td>Vantage Point</td><td><span class="badge joey">Joey</span></td><td>Pre-call done</td></tr>
+                            <tr><td>Andy Schwaderer</td><td>Quantum Knight</td><td><span class="badge joey">Joey</span></td><td>Pre-call done</td></tr>
+                            <tr><td>Jayaram Sreevalsan</td><td>Sleuth Kit Labs</td><td><span class="badge joey">Joey</span></td><td>Podcast done, no painpoint found</td></tr>
+                            <tr><td>Vinay Nadig</td><td>SimplifyX</td><td><span class="badge joey">Joey</span></td><td>Pre-call done</td></tr>
+                            <tr><td>Jon Mathews</td><td>Buxton</td><td><span class="badge joey">Joey</span></td><td>Pre-call done</td></tr>
+                            <tr><td>Kerensa Jennings</td><td>Knightfrank</td><td><span class="badge joey">Joey</span></td><td>Rescheduled for Oct 27</td></tr>
+                            <tr><td>Maman Ibrahim</td><td>-</td><td><span class="badge joey">Joey</span></td><td>Rescheduled</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        </section>
+
+        <!-- Next Steps -->
+        <section class="section">
+            <div class="section-header">
+                <div class="section-icon" style="background: rgba(255, 255, 255, 0.1);">📋</div>
+                <h2>Recommended Next Steps</h2>
+            </div>
+
+            <div class="action-steps">
+                <div class="action-step">
+                    <div class="step-num">1</div>
+                    <div class="step-title">TODAY: Respond to 9 warm emails</div>
+                    <div class="step-desc">People are waiting. Jayden said "yes let's do it" - book immediately.</div>
+                </div>
+                <div class="action-step">
+                    <div class="step-num">2</div>
+                    <div class="step-title">TODAY: Follow up Hilary Jones</div>
+                    <div class="step-desc">CEO meeting pending. Jordan thinks it will close. Don't let it die.</div>
+                </div>
+                <div class="action-step">
+                    <div class="step-num">3</div>
+                    <div class="step-title">THIS WEEK: Close 7 hot leads</div>
+                    <div class="step-desc">Verbal yes, strong interest, textbook fits - all sitting in limbo.</div>
+                </div>
+                <div class="action-step">
+                    <div class="step-num">4</div>
+                    <div class="step-title">THIS WEEK: Move 13 to don't pursue</div>
+                    <div class="step-desc">Clean up pipeline. These were already flagged as not a fit.</div>
+                </div>
+                <div class="action-step">
+                    <div class="step-num">5</div>
+                    <div class="step-title">THIS WEEK: Fix 8 status mismatches</div>
+                    <div class="step-desc">Leads stuck in "unorganised" that should be in discovery.</div>
+                </div>
+                <div class="action-step">
+                    <div class="step-num">6</div>
+                    <div class="step-title">NEXT WEEK: ICP check 34 podcasts</div>
+                    <div class="step-desc">Quick verification before recording to avoid wasted time.</div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>COO Analysis Report | Generated by Claude</p>
+            <p>Data sources: ClickUp API (Jordan: 901815966421 | Joey: 901810281169) + Instantly API + External Research</p>
+            <p style="margin-top: 10px;">107 active leads analyzed | 74 already in don't pursue excluded | 7 hot leads with external research</p>
+        </footer>
+    </div>
+</body>
+</html>
